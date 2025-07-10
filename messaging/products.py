@@ -1,3 +1,4 @@
+import re
 from linebot.models import (
     FlexSendMessage,
     CarouselContainer,
@@ -11,6 +12,10 @@ from linebot.models import (
 )
 from firebase_admin import db
 
+def _is_valid_uri(uri):
+    """Checks if a URI is valid and starts with http or https."""
+    return uri and uri.strip() and re.match(r'^https?://', uri.strip())
+
 def _create_product_bubble(product_id, product_info):
     """Creates a Flex Message bubble for a single product."""
     if not isinstance(product_info, dict):
@@ -22,7 +27,7 @@ def _create_product_bubble(product_id, product_info):
             action_type = action.get('type')
             if action_type == 'uri':
                 uri = action.get('uri')
-                if uri and uri.strip():
+                if _is_valid_uri(uri):
                     buttons.append(ButtonComponent(
                         style='link',
                         height='sm',
@@ -36,7 +41,7 @@ def _create_product_bubble(product_id, product_info):
                 ))
 
     image_url = product_info.get('imageUrl')
-    if not image_url or not image_url.strip():
+    if not _is_valid_uri(image_url):
         image_url = 'https://via.placeholder.com/400x300?text=No+Image'
 
     return BubbleContainer(
