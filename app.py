@@ -77,18 +77,24 @@ def handle_text_message(event):
     
     response_text = None # Initialize as None
 
+    app.logger.info(f"User message: {user_text}")
+    app.logger.info(f"Auto-reply rules fetched: {rules}")
+
     if rules:
         for keyword, reply in rules.items():
             if keyword.lower() in user_text:
                 response_text = reply
+                app.logger.info(f"Matched auto-reply: {response_text}")
                 break
     
     # If no auto-reply match, ask AI
     if response_text is None:
+        app.logger.info("No auto-reply match, calling ask_ai.")
         response_text = ask_ai(user_text)
     
     try:
         line_bot_api.reply_message(reply_token, TextSendMessage(text=response_text))
+        app.logger.info(f"Replied with: {response_text}")
     except Exception as e:
         app.logger.error(f"Error replying to message: {e}")
 
@@ -96,6 +102,7 @@ def handle_text_message(event):
 def ask_ai(question):
     try:
         knowledge_base = knowledge_base_ref.get()
+        app.logger.info(f"Knowledge base fetched: {knowledge_base}")
         context = str(knowledge_base) if knowledge_base else "No specific knowledge base available."
 
         prompt = f"""คุณคือผู้ช่วยอัจฉริยะ จงตอบคำถามของลูกค้าต่อไปนี้อย่างสุภาพ, เป็นมิตร, และให้ข้อมูลที่ถูกต้องที่สุด โดยอ้างอิงจาก "ข้อมูลความรู้" ที่ให้มาเท่านั้น หากไม่พบคำตอบในข้อมูล ให้ตอบอย่างสุภาพว่า "ขออภัยค่ะ ฉันยังไม่มีข้อมูลในส่วนนี้"
@@ -107,8 +114,11 @@ def ask_ai(question):
 คำถามลูกค้า: "{question}"
 
 คำตอบ:"""
+        app.logger.info(f"Prompt sent to AI: {prompt}")
         response = ai_model.generate_content(prompt)
-        return response.text
+        ai_response_text = response.text
+        app.logger.info(f"AI raw response: {ai_response_text}")
+        return ai_response_text
     except Exception as e:
         app.logger.error(f"Error asking AI: {e}")
         return "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผลคำถามด้วย AI"
