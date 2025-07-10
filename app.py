@@ -76,7 +76,7 @@ def handle_text_message(event):
     reply_token = event.reply_token
 
     # Handle specific commands for Flex Carousel
-    if user_text == "ดูสินค้า":
+    if user_text in ["ดูสินค้า", "สินค้า", "บริการ", "แพ็คเกจ", "package", "ราคาทั้งหมด", "เปรียบเทียบ", "บอทมีอะไรบ้าง", "ฟีเจอร์", "ความสามารถ", "ทำอะไรได้", "feature", "function", "สามารถ"]:
         response_message = create_product_carousel()
         try:
             line_bot_api.reply_message(reply_token, response_message)
