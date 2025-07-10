@@ -6,124 +6,83 @@ from linebot.models import (
     BoxComponent,
     TextComponent,
     ButtonComponent,
-    PostbackAction,
     URIAction,
-    TextSendMessage,
+    PostbackAction
 )
-from config import line_bot_api, db
+from firebase_admin import db
 
-def send_product_carousel(reply_token, category=None):
-    query = db.reference("products")
-    if category:
-        query = query.order_by_child("category").equal_to(category)
-    products = query.get()
+def create_product_carousel():
+    try:
+        products_ref = db.reference('products')
+        products_data = products_ref.get()
 
-    if not products:
-        line_bot_api.reply_message(
-            reply_token,
-            TextSendMessage(
-                text=f'ขออภัยค่ะ ขณะนี้ยังไม่มีสินค้าในหมวดหมู่ "{category}" ค่ะ 😔'
-            ),
-        )
-        return
+        if not products_data:
+            return TextSendMessage(text="ขออภัยค่ะ ขณะนี้ยังไม่มีสินค้าให้แสดง")
 
-    bubbles = []
-    for item_id, product in products.items():
-        bubble = BubbleContainer(
-            hero=ImageComponent(
-                url=product["image"],
-                size="full",
-                aspect_ratio="1:1",
-                aspect_mode="cover",
-            ),
-            body=BoxComponent(
-                layout="vertical",
-                spacing="none",
-                contents=[
-                    TextComponent(
-                        text=product["name"], weight="bold", size="xl", wrap=True
-                    ),
-                    BoxComponent(
-                        layout="vertical",
-                        margin="none",
-                        spacing="sm",
-                        contents=[
-                            BoxComponent(
-                                layout="baseline",
-                                spacing="sm",
-                                contents=[
-                                    TextComponent(
-                                        text="วัสดุ",
-                                        color="#aaaaaa",
-                                        size="sm",
-                                        flex=2,
-                                    ),
-                                    TextComponent(
-                                        text=product["material"],
-                                        wrap=True,
-                                        color="#666666",
-                                        size="sm",
-                                        flex=5,
-                                    ),
-                                ],
-                            ),
-                            BoxComponent(
-                                layout="baseline",
-                                spacing="sm",
-                                contents=[
-                                    TextComponent(
-                                        text="ราคา",
-                                        color="#aaaaaa",
-                                        size="sm",
-                                        flex=2,
-                                    ),
-                                    TextComponent(
-                                        text=product["price"],
-                                        wrap=True,
-                                        color="#666666",
-                                        size="sm",
-                                        flex=5,
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                    TextComponent(
-                        text=product.get("description", ""),
-                        wrap=True,
-                        margin="none",
-                        size="sm",
-                    ),
-                ],
-            ),
-            footer=BoxComponent(
-                layout="vertical",
-                spacing="none",
-                flex=0,
-                contents=[
-                    ButtonComponent(
-                        style="primary",
-                        height="sm",
-                        action=PostbackAction(
-                            label="สั่งเช่าบูชา ✨",
-                            data=f"action=buy&itemId={item_id}",
-                            display_text=f"สนใจ {product['name']}",
+        bubbles = []
+        for product_id, product_info in products_data.items():
+            # Ensure product_info is a dictionary
+            if not isinstance(product_info, dict):
+                continue
+
+            # Create buttons for each product
+            buttons = []
+            if 'actions' in product_info and isinstance(product_info['actions'], list):
+                for action in product_info['actions']:
+                    if action.get('type') == 'uri':
+                        buttons.append(ButtonComponent(
+                            style='link',
+                            height='sm',
+                            action=URIAction(label=action.get('label', 'ดู'), uri=action.get('uri', ''))
+                        ))
+                    elif action.get('type') == 'postback':
+                        buttons.append(ButtonComponent(
+                            style='primary',
+                            height='sm',
+                            action=PostbackAction(label=action.get('label', 'สั่งซื้อ'), data=action.get('data', ''))
+                        ))
+
+            # Create a bubble for each product
+            bubble = BubbleContainer(
+                hero=ImageComponent(
+                    url=product_info.get('imageUrl', 'https://via.placeholder.com/400x300?text=No+Image'),
+                    size='full',
+                    aspect_ratio='20:13',
+                    aspect_mode='cover',
+                    action=URIAction(uri=product_info.get('imageUrl', '')) # Click image to open full image
+                ),
+                body=BoxComponent(
+                    layout='vertical',
+                    contents=[
+                        TextComponent(text=product_info.get('title', 'ไม่มีชื่อสินค้า'), weight='bold', size='xl'),
+                        BoxComponent(
+                            layout='baseline',
+                            contents=[
+                                TextComponent(text=product_info.get('price', 'ราคาไม่ระบุ'), weight='bold', size='xl', flex=0)
+                            ],
+                            margin='md'
                         ),
-                    ),
-                    ButtonComponent(
-                        height="sm",
-                        action=URIAction(
-                            label="สอบถามเพิ่มเติม 💬",
-                            uri="https://line.me/R/ti/p/@210oavob",
-                        ),
-                    ),
-                ],
-            ),
-        )
-        bubbles.append(bubble)
+                        TextComponent(
+                            text=product_info.get('description', 'ไม่มีรายละเอียด'),
+                            wrap=True,
+                            color='#666666',
+                            size='sm',
+                            margin='md'
+                        )
+                    ]
+                ),
+                footer=BoxComponent(
+                    layout='vertical',
+                    spacing='sm',
+                    contents=buttons
+                )
+            )
+            bubbles.append(bubble)
+        
+        # Create a carousel from the bubbles
+        carousel_container = CarouselContainer(contents=bubbles)
+        return FlexSendMessage(alt_text="สินค้าแนะนำ", contents=carousel_container)
 
-    carousel_message = FlexSendMessage(
-        alt_text=f"รายการสินค้า: {category or 'ทั้งหมด'}",
-        contents=CarouselContainer(contents=bubbles),
-    )
-    line_bot_api.reply_message(reply_token, carousel_message)
+    except Exception as e:
+        print(f"Error creating product carousel: {e}")
+        return TextSendMessage(text="ขออภัยค่ะ เกิดข้อผิดพลาดในการแสดงสินค้า")

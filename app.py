@@ -8,6 +8,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from dotenv import load_dotenv
 import google.generativeai as genai
+from messaging.products import create_product_carousel # Import the new function
 
 # --- INITIALIZATIONS ---
 load_dotenv()
@@ -71,6 +72,16 @@ def webhook():
 def handle_text_message(event):
     user_text = event.message.text.strip().lower()
     reply_token = event.reply_token
+
+    # Handle specific commands for Flex Carousel
+    if user_text == "ดูสินค้า":
+        response_message = create_product_carousel()
+        try:
+            line_bot_api.reply_message(reply_token, response_message)
+            app.logger.info("Replied with product carousel.")
+        except Exception as e:
+            app.logger.error(f"Error replying with product carousel: {e}")
+        return # Exit the function after sending carousel
 
     # Fetch auto-reply rules from Firebase
     rules = auto_replies_ref.get()
