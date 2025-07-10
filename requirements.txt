@@ -1,6 +1,6 @@
 Flask
 line-bot-sdk
-firebase-admin==6.4.2
+firebase-admin==6.9.0  # <-- แก้ไขบรรทัดนี้
 python-dotenv
 gunicorn==20.1.0
 google-generativeai==0.6.0
