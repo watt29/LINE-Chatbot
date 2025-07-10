@@ -115,6 +115,7 @@ def handle_text_message(event):
 def ask_ai(question):
     print("ASK_AI FUNCTION CALLED") # Debug print
     try:
+        print("ASK_AI: Fetching knowledge base...") # Debug print
         knowledge_base = knowledge_base_ref.get()
         app.logger.info(f"Knowledge base fetched: {knowledge_base}")
         context = str(knowledge_base) if knowledge_base else "No specific knowledge base available."
@@ -129,12 +130,15 @@ def ask_ai(question):
 
 คำตอบ:"""
         app.logger.info(f"Prompt sent to AI: {prompt}")
+        print("ASK_AI: Calling ai_model.generate_content...") # Debug print
         response = ai_model.generate_content(prompt)
         ai_response_text = response.text
         app.logger.info(f"AI raw response: {ai_response_text}")
+        print("ASK_AI: Received AI response.") # Debug print
         return ai_response_text
     except Exception as e:
         app.logger.error(f"Error asking AI: {e}")
+        print(f"ASK_AI: Error in ask_ai: {e}") # Debug print
         return "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผลคำถามด้วย AI"
 
 
