@@ -17,6 +17,7 @@ app = Flask(__name__)
 
 # LINE Bot SDK
 # Make sure to set LINE_CHANNEL_ACCESS_TOKEN and LINE_CHANNEL_SECRET in your .env file
+print(f"LINE_CHANNEL_ACCESS_TOKEN: {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}") # Debug print
 line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
