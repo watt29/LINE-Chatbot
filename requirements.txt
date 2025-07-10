@@ -2,5 +2,5 @@
     line-bot-sdk
     firebase-admin
     python-dotenv
-    gunicorn 
+    gunicorn==20.1.0  # <-- แก้ไขบรรทัดนี้
     google-generativeai 
