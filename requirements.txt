@@ -1,4 +1,5 @@
-Flask
-line-bot-sdk
-firebase-admin
-python-dotenv
+    Flask
+    line-bot-sdk
+    firebase-admin
+    python-dotenv
+    gunicorn  # <-- เพิ่มบรรทัดนี้
