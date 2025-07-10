@@ -2,4 +2,5 @@
     line-bot-sdk
     firebase-admin
     python-dotenv
-    gunicorn  # <-- เพิ่มบรรทัดนี้
+    gunicorn 
+    google-generativeai 
