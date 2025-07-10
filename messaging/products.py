@@ -7,7 +7,8 @@ from linebot.models import (
     TextComponent,
     ButtonComponent,
     URIAction,
-    PostbackAction
+    PostbackAction,
+    TextSendMessage # <-- เพิ่มบรรทัดนี้
 )
 from firebase_admin import db
 
