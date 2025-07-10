@@ -54,6 +54,7 @@ except Exception as e:
 # --- WEBHOOK HANDLER ---
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    print("WEBHOOK FUNCTION CALLED") # Debug print
     signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
@@ -70,6 +71,7 @@ def webhook():
 # --- MESSAGE HANDLERS ---
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
+    print("HANDLE_TEXT_MESSAGE FUNCTION CALLED") # Debug print
     user_text = event.message.text.strip().lower()
     reply_token = event.reply_token
 
@@ -111,6 +113,7 @@ def handle_text_message(event):
 
 
 def ask_ai(question):
+    print("ASK_AI FUNCTION CALLED") # Debug print
     try:
         knowledge_base = knowledge_base_ref.get()
         app.logger.info(f"Knowledge base fetched: {knowledge_base}")
